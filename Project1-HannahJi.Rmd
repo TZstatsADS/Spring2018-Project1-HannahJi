@@ -76,7 +76,7 @@ Wordcloud is a good way to visualize term frequency especially when we don't  ca
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==1,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==1,c(1,3)]$n>=5,'red','skyblue'))
 ```
-"national", "leadership","people","helped","money" were key words that year. Are you wondering about what happened in that year? Combining with history, there was no surprise for us to find that at that time America was actually suffering from the Great Depression. As a coming president, he needed to analyze situation in that year and make a good decision to revive the economy and to help America get out of this.
+"national", "leadership","people","helped","money" were key words that year. Are you wondering about what happened in that year? Combining with history, there was no surprise for us to find that at that time America was actually suffering from the Great Depression. Unemployment, bankruptcy, collapse made the whole country desperate.As a coming president, he needed to analyze situation in that year and make a good decision to revive the economy and to help America get out of this.
 
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==2,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==2,c(1,3)]$n>=5,'red','skyblue'))
@@ -93,8 +93,7 @@ As we can see from this case, "nation" is always the key word in Roosevelt's spe
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==4,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==4,c(1,3)]$n>=5,'red','skyblue'))
 ```
-In Roosevelt's old age, what he purchases was the order of world and longlasting peace, which was also the blueprint of America trying to control the post-war world. Although he was in poor health during his fourth election, what he wanted to emphasis on most was still drawing lessons from past experience and peace.
-
+In Roosevelt's old age, what he purchases was the order of world and longlasting peace, which was also the blueprint of America trying to control the post-war world. Although he was in poor health during his fourth election, what he wanted to emphasis on most was still drawing lessons from past experience and peace. He was the only one who can prevent the United State from making the mistake of isolationism.
 
 
 
