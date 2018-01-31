@@ -51,11 +51,11 @@ library(tibble)
 Since the only files I need are those inaugurations of FranklinDRoosevelt, I search the file path of them by certain pattern in my local. In order to satisfy the specific requirement of Readlines function, I append returns after each file and then read them into a dataframe with one inauguration pre row indexed by the number of speech.
 ```{r,warning=FALSE}
 Franklin_speech_files<-list.files(path = "/Users/apple/Documents/2018SpringCourse/applied data science/Spring2018-Project1-HannahJi/data/InauguralSpeeches",full.names = T,pattern = "inaugFranklinDRoosevelt*")
-for(i in 1:length(Franklin_speech_files)){
+#for(i in 1:length(Franklin_speech_files)){
         #write_file<-file(Franklin_speech_files[i],"a")
         #cat("\n",file=write_file)
         #close(write_file)
-}
+#}
 Franklin_speech_lists <-lapply(Franklin_speech_files,function(i) readLines(i))
 Franklin_speech_df <- tibble(doc_num=1:length(Franklin_speech_files),text=Franklin_speech_lists)
 ```
