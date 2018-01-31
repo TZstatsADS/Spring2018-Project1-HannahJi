@@ -1,15 +1,17 @@
 ---
 title: "What did the longest serving president say?"
+author: Hanying Ji; hj2473
+output: html_notebook
 abstract: |
   Franklin·D·Roosevelt, one of the greatest presidents and the only one who served four terms consecutively in the history of America. During his terms, the country experienced the Great Depression and World War II. In both of them, Franklin·D·Roosevelt played a key role in saving America.
-  The aim of this text mining is to analyze his four inaugurations through the perspective of sentiment, highest-frequency words and topics, and then maybe we can get a rough xxxx of America's situations at that time.
-output:
-  html_notebook: default
-  pdf_document: default
+  The aim of this text mining is to analyze his four inaugurations through the perspective of sentiment, highest-frequency words and topics, and then maybe we can get a rough impression of America's situations at that time.
 ---
-**R preparation: Check, install and library packages**
-```{r}
+#Environment preparation: Check, install and library packages
+
+```{r,warning=FALSE}
 packages_use<-c(
+        "rJava",
+        "tidyverse",
         "tidytext",
         "dplyr",
         "graphics",
@@ -17,17 +19,19 @@ packages_use<-c(
         "tm",
         "tidyr",
         "ggplot2",
-        "lda",
+        "topicmodels",
         "qdap",
-        "syuzhet"
+        "syuzhet",
+        "tibble"
 )#list all packages I need
 packages_need<-setdiff(
         packages_use,
         intersect(installed.packages()[,1],packages_use)
 )#pick out the packages I need but haven't installed yet
-if(length(packages_need)>0)  {install.packages(packages_need)}#If exist, install them
+if(length(packages_need)>0)  {install.packages(packages_need)}#If not exist, install them
 
 #library all packages I need
+library(rJava)
 library(tidytext)
 library(dplyr)
 library(graphics)
@@ -35,61 +39,67 @@ library(wordcloud2)
 library(tm)
 library(tidyr)
 library(ggplot2)
-library(lda)
+library(topicmodels)
 library(qdap)
 library(syuzhet)
+library(tibble)
 ```
 
 
-**data Processing**
+#Data Processing
+
 Since the only files I need are those inaugurations of FranklinDRoosevelt, I search the file path of them by certain pattern in my local. In order to satisfy the specific requirement of Readlines function, I append returns after each file and then read them into a dataframe with one inauguration pre row indexed by the number of speech.
 ```{r,warning=FALSE}
 Franklin_speech_files<-list.files(path = "/Users/apple/Documents/2018SpringCourse/applied data science/Spring2018-Project1-HannahJi/data/InauguralSpeeches",full.names = T,pattern = "inaugFranklinDRoosevelt*")
 for(i in 1:length(Franklin_speech_files)){
-        write_file<-file(Franklin_speech_files[i],"a")
-        cat("\n",file=write_file)
-        close(write_file)
+        #write_file<-file(Franklin_speech_files[i],"a")
+        #cat("\n",file=write_file)
+        #close(write_file)
 }
 Franklin_speech_lists <-lapply(Franklin_speech_files,function(i) readLines(i))
-Franklin_speech_df <- data_frame(doc_num=1:length(Franklin_speech_files),text = Franklin_speech_lists)
+Franklin_speech_df <- tibble(doc_num=1:length(Franklin_speech_files),text=Franklin_speech_lists)
 ```
 
-*What's the key words in every speech?*
+#What are the key words in every speech?
 
-In this part, what I am interested in are key words in every speech. Does the president's inauguration speech reflect that time's situation to some extend and what he want to do for people in his term? I do some analysis of term frequency by tidy text format. It is a table with one-token-per-row, in here token is a meaningful unit of text--word.
-Then I removed the stop words in each article, such as "the","a","what", which are somewhat meaningless, and then sum up the amount of each word group by article.
-```{r,include=TRUE}
-Franklin_speech_token <- Franklin_speech_df %>%
-        unnest_tokens(word, text)#one-token-per-document-per-row
+In this part, what I am interested in are key words in every speech. Does the president's inauguration speech reflect that time's situation to some extend and what he want to do for people in his term? I do some analysis of **term frequency** by tidy text format. It is a table with one-token-per-row, in here token is a meaningful unit of text--word. Then I removed the stop words in each article, such as "the","a","what", which are somewhat meaningless, and then sum up the amount of each word group by article.
+```{r}
+Franklin_speech_token<-Franklin_speech_df%>%
+        unnest_tokens(word,text)
+#apply(,1,unnest_tokens,word,as.character(text))#one-token-per-document-per-row
 Franklin_speech_count <- Franklin_speech_token %>%
         anti_join(stop_words)%>%
         count(word,doc_num)#count word in every article
 Franklin_speech_count<-Franklin_speech_count[order(Franklin_speech_count$doc_num,Franklin_speech_count$n,decreasing=TRUE),]
 ```
-Wordcloud is a good way to visualize term frequency especially when we don't  care about the specific frequency that much but only care about the relative frequency in each article. Following are wordclouds for the four inauguration speeches.
+Wordcloud is a good way to visualize term frequency especially when we don't  care about the specific frequency that much but only care about the relative frequency in each article. Following are wordclouds for the four inauguration speeches. Maybe we can find some thing interesting.
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==1,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==1,c(1,3)]$n>=5,'red','skyblue'))
 ```
-"national", "leadership","people","helped","money" were key words that year. At that time, America was suffering from the Great Depression, the most important thing is to revive the economy and to help America get out of this.
+"national", "leadership","people","helped","money" were key words that year. Are you wondering about what happened in that year? Combining with history, there was no surprise for us to find that at that time America was actually suffering from the Great Depression. As a coming president, he needed to analyze situation in that year and make a good decision to revive the economy and to help America get out of this.
 
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==2,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==2,c(1,3)]$n>=5,'red','skyblue'))
 ```
-When Roosevelt got his second term, "government" became the most frequent word in his speech. He emphasised on the idea that "government has innate capacity to protect its people against disasters,to solve problems once considered unsolvable." Besides, nation is an important word as well, from which we can see that America concerned nation issue a lot.
+Roosevelt gave an impressive performance during his first term, which made him get a title of "Reformer". In the second election, he defeated Landon with 98.49% support rate.
+When Roosevelt got his second term, "government" became the most frequent word in his speech. He emphasised on the idea that "government has innate capacity to protect its people against disasters, and to solve problems once considered unsolvable." Besides, nation is an important word as well, from which we can see that America concerned nation issue a lot and there is no wondering that the power of America has been globally spread since those years when Roosevelt strengthened diploma policy
 
 
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==3,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==3,c(1,3)]$n>=7,'red','skyblue'))
 ```
-As we can see from this case, "nation" is always the key word in Roosevelt's speech. It was the time that America just ended suffering from the Great Depression, there is no doubt that why "people","spirit","life" are on the top of list.
+As we can see from this case, "nation" is always the key word in Roosevelt's speech. It was the time that America just ended suffering from the Great Depression and that the World War II turned to a key point, there is no doubt that why "people","spirit","life" are on the top of list.
 
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==4,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==4,c(1,3)]$n>=5,'red','skyblue'))
 ```
-In Roosevelt's old age, what he purchases was the order of world and longlasting peace, which was also the blueprint of America trying to control the post-war world. Although he was in poor health during his fourth election, what he emphasised on most was still drawing lessons from past experience and peace.
+In Roosevelt's old age, what he purchases was the order of world and longlasting peace, which was also the blueprint of America trying to control the post-war world. Although he was in poor health during his fourth election, what he wanted to emphasis on most was still drawing lessons from past experience and peace.
 
 
-**Most common positive and negative words**
+
+
+#Most common positive and negative words
+
 ```{r}
 bing_word_counts<-NULL
 for(i in 1:4){
@@ -111,12 +121,15 @@ tbl_df(bing_word_counts) %>%
   labs(y = "Contribution to sentiment",
        x = NULL) +
   coord_flip()+
-  theme(axis.text=element_text(size=7))
+  theme(axis.text=element_text(size=3))
 ```
+Above is the visualization of most popular positive and negetive words in each of his speech. As we can see that
 
 
-**Sentiment Change from the first inaug to the last one**
-In this part, I try to score all the sentiment related words with +1 for positive one and -1 for negative, also multiple the time they appear in the each article. Then we can see the trend of sentiment.
+
+#Sentiment Change from the first inaug to the last one
+
+In this part, I try to score all the sentiment related words with +1 for positive one and -1 for negative, also multiple the time they appear in the each article. Then we can see the trend of the change of sentiment.
 ```{r}
 Franklin_speech_sentiment <- Franklin_speech_df %>%
         unnest_tokens(word, text)%>%
@@ -125,12 +138,7 @@ Franklin_speech_sentiment <- Franklin_speech_df %>%
         count(word,sentiment) %>%
         spread(sentiment, n, fill = 0) %>%
         mutate(sentiment = positive - negative)
-
-#Trend of FranklinDRoosevelt's sentiment during four speech
-#Franklin_speech_sentiment_sumup<-aggregate(Franklin_speech_sentiment$sentiment, by=list(Category=Franklin_speech_sentiment$doc_num), FUN=sum)
-#plot(Franklin_speech_sentiment_sumup,type="b",main="Trend of FranklinDRoosevelt's sentiment during four speech")
 ```
-
 
 ```{r}
 #Detail in each speech
@@ -141,9 +149,13 @@ ggplot(Franklin_speech_sentiment) +
         theme(axis.ticks = element_blank())+
         labs(title = "Sentiment of four FranklinDRoosevelt's inaugurations")
 ```
+From the change of sentiment, we can observe that Roosevelt used more negative word in his previous two speech, maybe it is some reflection of the bad situation he mentioned during those periods.
 
 
-Now cosider sentence as token, and calculate the emotions for each sentence. In order to eliminate the impact of length of sentences, we devided sentence score by its length.
+
+#Topic Modeling
+
+Now cosider sentence as token, and calculate the emotions for each sentence. In order to eliminate the impact of length of sentences, we devided sentence score by its length. 
 ```{r}
 sentence.list=NULL
 for(i in 1:nrow(Franklin_speech_df)){
@@ -164,63 +176,59 @@ for(i in 1:nrow(Franklin_speech_df)){
                               )))
   }
 }
-#sentence.list
 
-#writeLines(as.character(docs[[sample(1:nrow(corpus.list), 1)]]))
 ```
 
 
-**Topic Modeling**
-```{r}
+```{r,warning=FALSE}
 doc_topicmodel<-NULL
-for(i in 1:4){
-        corpus.list=sentence.list[sentence.list$doc_num==i,][2:(nrow(sentence.list[sentence.list$doc_num==i,])-1), ] 
-        sentence.pre=sentence.list[sentence.list$doc_num==i,]$sentences[1:(nrow(sentence.list[sentence.list$doc_num==i,])-2)]
-        sentence.post=sentence.list[sentence.list$doc_num==i,]$sentences[3:(nrow(sentence.list[sentence.list$doc_num==i,]))]
-        corpus.list$snippets=paste(sentence.pre, corpus.list$sentences, sentence.post, sep=" ")#each snippet is the present sentence combined with its previous and post ones
-        docs <- Corpus(VectorSource(corpus.list$snippets))
-        #remove potentially problematic symbols
-        docs <-tm_map(docs,content_transformer(tolower))
-        #remove punctuation
-        docs <- tm_map(docs, removePunctuation)
-        #Strip digits
-        docs <- tm_map(docs, removeNumbers)
-        #remove stopwords
-        docs <- tm_map(docs, removeWords, stopwords("english"))
-        #remove whitespace
-        docs <- tm_map(docs, stripWhitespace)
-        #Stem document
-        docs <- tm_map(docs,stemDocument)
-        #doc_topicmodel<-rbind(doc_topicmodel,cbind(data.frame(docs),doc_num=rep(i,nrow(data.frame(docs)))))
-         dtm <- DocumentTermMatrix(docs)
-        #convert rownames to filenames
-        rownames(dtm) <- paste(corpus.list$sent.id, sep="_")
-        rowTotals <- apply(dtm , 1, sum) #Find the sum of words in each Document
-        dtm  <- dtm[rowTotals> 0, ]
-        corpus.list=corpus.list[rowTotals>0, ]
+corpus.list=sentence.list[2:(nrow(sentence.list)-1), ] 
+sentence.pre=sentence.list$sentences[1:(nrow(sentence.list)-2)]
+sentence.post=sentence.list$sentences[3:(nrow(sentence.list))]
+corpus.list$snippets=paste(sentence.pre, corpus.list$sentences, sentence.post, sep=" ")#each snippet is the present sentence combined with its previous and post ones
+docs <- Corpus(VectorSource(corpus.list$snippets))
+#remove potentially problematic symbols
+docs <-tm_map(docs,content_transformer(tolower))
+#remove punctuation
+docs <- tm_map(docs, removePunctuation)
+#Strip digits
+docs <- tm_map(docs, removeNumbers)
+#remove stopwords
+docs <- tm_map(docs, removeWords, stopwords("english"))
+#remove whitespace
+docs <- tm_map(docs, stripWhitespace)
+#Stem document
+docs <- tm_map(docs,stemDocument)
+#doc_topicmodel<-rbind(doc_topicmodel,cbind(data.frame(docs),doc_num=rep(i,nrow(data.frame(docs)))))
+dtm <- DocumentTermMatrix(docs)
+#convert rownames to filenames
+rownames(dtm) <- paste(corpus.list$sent.id, sep="_")
+rowTotals <- apply(dtm , 1, sum) #Find the sum of words in each Document
+dtm  <- dtm[rowTotals> 0, ]
+corpus.list=corpus.list[rowTotals>0, ]
 
-        burnin <- 4000
-        iter <- 2000
-        thin <- 500
-        seed <-list(2003,5,63,100001,765)
-        nstart <- 5
-        best <- TRUE
+burnin <- 4000
+iter <- 2000
+thin <- 500
+seed <-list(2003,5,63,100001,765)
+nstart <- 5
+best <- TRUE
 
 #Number of topics
-        k <- 4
+k <- 4
 
 #Run LDA using Gibbs sampling
-        ldaOut <-LDA(dtm, k, method="Gibbs", control=list(nstart=nstart, 
-                                                 seed = seed, best=best,
-                                                 burnin = burnin, iter = iter, 
-                                                 thin=thin))
-        ldaOut.topics <- as.matrix(topics(ldaOut))
-        table(c(1:k, ldaOut.topics))
-        ldaOut.terms<- as.matrix(terms(ldaOut,5))
-        print(ldaOut.terms)
-}
-
-
+ldaOut <-LDA(dtm, k, method="Gibbs", control=list(nstart=nstart, seed = seed, best=best,burnin = burnin, iter = iter, thin=thin))
+ldaOut.topics <- as.matrix(topics(ldaOut))
+table(c(1:k, ldaOut.topics))
+setwd("/Users/apple/Documents/2018SpringCourse/Applied Data Science/Spring2018-Project1-HannahJi/output")
+write.csv(ldaOut.topics,file=paste("LDAGibbs",k,"DocsToTopics.csv",sep=""))
+ldaOut.terms<- as.matrix(terms(ldaOut,10))
+write.csv(ldaOut.terms,file=paste("LDAGibbs",k,"TopicProbabilities.csv",sep=""),append=TRUE)
+print(ldaOut.terms)
 ```
+We can get some rough information from the topics. Topic 1 can be summarized as "peace&power"; Topic 2 can be summarized as "spirit&live"; Topic 3 as"human&democracy" and Topic 4 as "government&help".
+
+
 
 
