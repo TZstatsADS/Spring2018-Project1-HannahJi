@@ -81,6 +81,8 @@ wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==1,c(1,3)],size=0
 ```{r}
 wordcloud2(Franklin_speech_count[Franklin_speech_count$doc_num==2,c(1,3)],size=0.5,color=ifelse(Franklin_speech_count[Franklin_speech_count$doc_num==2,c(1,3)]$n>=5,'red','skyblue'))
 ```
+**check the following 3 wordclouds in fold "fig"**
+
 Roosevelt gave an impressive performance during his first term, which made him get a title of "Reformer". In the second election, he defeated Landon with 98.49% support rate.
 When Roosevelt got his second term, "government" became the most frequent word in his speech. He emphasised on the idea that "government has innate capacity to protect its people against disasters, and to solve problems once considered unsolvable." Besides, nation is an important word as well, from which we can see that America concerned nation issue a lot and there is no wondering that the power of America has been globally spread since those years when Roosevelt strengthened diploma policy
 
