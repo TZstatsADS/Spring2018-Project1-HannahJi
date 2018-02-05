@@ -9,11 +9,11 @@ This is the first and only *individual* (as opposed to *team*) this semester.
 Term: Spring 2018
 
 + Projec title: Lorem ipsum dolor sit amet
-+ This project is conducted by [your name]
++ This project is conducted by [Hanying Ji]
 
-+ Project summary: [a short summary] Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
++ Project summary: Franklin·D·Roosevelt, one of the greatest presidents and the only one who served four terms consecutively in the history of America. During his terms, the country experienced the Great Depression and World War II. In both of them, Franklin·D·Roosevelt played a key role in saving America. The aim of this text mining is to analyze his four inaugurations through the perspective of sentiment, highest-frequency words and topics, and then maybe we can get a rough impression of America’s situations at that time.
 
-Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
+This folder is orgarnized as follows.
 
 ```
 proj/
